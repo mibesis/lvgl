@@ -6,6 +6,8 @@ option(LV_LVGL_H_INCLUDE_SIMPLE
 option(LV_CONF_INCLUDE_SIMPLE
        "Simple include of \"lv_conf.h\" and \"lv_drv_conf.h\"" ON)
 
+set (LV_USE_RLOTTIE 0)
+
 # Option to set LV_CONF_PATH, if set parent path LV_CONF_DIR is added to
 # includes
 option(LV_CONF_PATH "Path defined for lv_conf.h")
@@ -22,6 +24,14 @@ add_library(lvgl::examples ALIAS lvgl_examples)
 add_library(lvgl_demos STATIC ${DEMO_SOURCES})
 add_library(lvgl::demos ALIAS lvgl_demos)
 
+message(STATUS "My super custom build. LV_USE_RLOTTIE = ${LV_USE_RLOTTIE}")
+
+if(LV_USE_RLOTTIE)
+  find_package(rlottie REQUIRED rlottie)
+  set(rlottie_INCLUDE_DIR /usr/include)
+  message(STATUS "Looking for rlottie. Found it: ${rlottie_FOUND}. Libraries: ${rlottie_LIBRARIES}, Include 1: ${RLOTTIE_INCLUDE_DIR}, Include 2: ${rlottie_INCLUDE_DIR}")
+endif()
+
 target_compile_definitions(
   lvgl PUBLIC $<$<BOOL:${LV_LVGL_H_INCLUDE_SIMPLE}>:LV_LVGL_H_INCLUDE_SIMPLE>
               $<$<BOOL:${LV_CONF_INCLUDE_SIMPLE}>:LV_CONF_INCLUDE_SIMPLE>)
@@ -35,8 +45,11 @@ target_include_directories(lvgl_examples SYSTEM
 target_include_directories(lvgl_demos SYSTEM
                            PUBLIC ${LVGL_ROOT_DIR}/demos)
 
-target_link_libraries(lvgl_examples PUBLIC lvgl)
+target_link_libraries(lvgl_examples PUBLIC lvgl ${rlottie_LIBRARIES})
 target_link_libraries(lvgl_demos PUBLIC lvgl)
+if(LV_USE_RLOTTIE)
+  target_link_libraries(lvgl PRIVATE ${rlottie_LIBRARIES})
+endif()
 
 # Lbrary and headers can be installed to system using make install
 file(GLOB LVGL_PUBLIC_HEADERS "${CMAKE_SOURCE_DIR}/lv_conf.h"
